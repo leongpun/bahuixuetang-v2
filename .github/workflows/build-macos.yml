@@ -2,10 +2,9 @@ name: Build macOS App
 
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-  workflow_dispatch:  # 允许手动触发
+    tags:
+      - 'v*'
+  workflow_dispatch:
 
 jobs:
   build-macos:
@@ -22,27 +21,16 @@ jobs:
         
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install customtkinter Pillow requests pyinstaller
+        pip install -r requirements.txt
+        pip install pyinstaller
+        brew install ffmpeg  # 用于视频播放
         
     - name: Build macOS app
       run: |
-        python -m PyInstaller \
-          --name="柏慧学堂" \
-          --noconfirm \
-          --clean \
-          --windowed \
-          --add-data="config:config" \
-          --add-data="core:core" \
-          --add-data="ui:ui" \
-          --add-data="resources:resources" \
-          --hidden-import=customtkinter \
-          --hidden-import=PIL \
-          run_app.py
-          
+        python build_macos.py
+        
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: 柏慧学堂-macOS
-        path: dist/柏慧学堂/
-        retention-days: 30
+        path: dist/柏慧学堂.app
