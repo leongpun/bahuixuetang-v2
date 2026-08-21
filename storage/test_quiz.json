@@ -1,0 +1,15 @@
+[
+  {
+    "id": 1,
+    "type": "choice",
+    "title": "$$\\dfrac{2x-5}{3}=\\dfrac{x+a}{3}-1$$",
+    "options": [
+      "$$x=1$$",
+      "$$x=2$$",
+      "$$x=3$$",
+      "$$x=4$$"
+    ],
+    "answer": "$$x=1$$",
+    "explanation": "解：$$\\begin{cases} x+y=27 \\\\ 0.2x+0.3y=6.6 \\end{cases}$$"
+  }
+]
