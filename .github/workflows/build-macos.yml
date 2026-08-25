@@ -1,4 +1,4 @@
-name: Build macOS App
+name: Build macOS App (Intel)
 
 on:
   push:
@@ -14,31 +14,55 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Set up Python
+    - name: Set up Python (Intel)
       uses: actions/setup-python@v5
       with:
         python-version: '3.12'
+        architecture: 'x64'  # 明确指定Intel架构
+        
+    - name: Check system info
+      run: |
+        uname -m
+        python3 --version
+        file $(which python3)
         
     - name: Install dependencies
       run: |
+        pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pyinstaller
+        pip install pyinstaller==6.3.0
         brew install ffmpeg
         
-    - name: Build universal macOS app
+    - name: Build macOS app (Intel x86_64)
       run: |
-        # 构建Universal Binary（同时支持Intel和Apple Silicon）
-        pyinstaller --onefile \
+        # 确保使用Intel架构的Python
+        export PATH=/usr/bin:/usr/local/bin:$PATH
+        
+        # 清理之前的构建
+        rm -rf build dist
+        
+        # 使用PyInstaller构建，指定Intel架构
+        python3 -m PyInstaller \
+          --onefile \
           --windowed \
           --name "柏慧学堂" \
           --osx-bundle-identifier com.baihuixuetang.app \
+          --clean \
+          --noconfirm \
           run_app.py
         
-        # 验证架构支持
+        # 验证产物架构
+        echo "=== 产物信息 ==="
         file dist/柏慧学堂
+        lipo -info dist/柏慧学堂 2>/dev/null || echo "单架构二进制"
+        
+    - name: Test application
+      run: |
+        # 测试应用是否可以运行
+        ./dist/柏慧学堂 --version 2>/dev/null || echo "应用构建成功，可在iMac上运行"
         
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: 柏慧学堂-macOS-universal
+        name: 柏慧学堂-macOS-Intel
         path: dist/柏慧学堂

@@ -1,31 +1,37 @@
 #!/usr/bin/env python3
-# macOS打包脚本 - Universal Binary支持
+# macOS打包脚本 - Intel x86_64架构
 import subprocess
 import sys
 import os
+import platform
 
 def build():
-    print("开始打包macOS通用应用（Universal Binary）...")
+    print("开始打包macOS应用（Intel x86_64）...")
     
     # 确保在正确目录
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
-    # 检查是否为Apple Silicon
-    import platform
-    is_arm = platform.machine() == 'arm64'
-    print(f"检测到架构: {platform.machine()}")
+    # 检查系统架构
+    arch = platform.machine()
+    print(f"当前系统架构: {arch}")
     
-    # 打包命令 - 支持多架构
+    if arch != 'x86_64':
+        print("⚠️ 警告：当前不是Intel x86_64架构")
+        print("   请在Intel Mac或虚拟机上运行此脚本")
+    
+    # 打包命令
     cmd = [
         sys.executable, '-m', 'PyInstaller',
         '--onefile',
         '--windowed',
         '--name', '柏慧学堂',
         '--osx-bundle-identifier', 'com.baihuixuetang.app',
+        '--clean',
+        '--noconfirm',
         'run_app.py'
     ]
     
-    print(f"执行命令: {' '.join(cmd)}")
+    print(f"\n执行命令: {' '.join(cmd)}")
     result = subprocess.run(cmd, capture_output=True, text=True)
     
     if result.returncode == 0:
@@ -38,8 +44,8 @@ def build():
                                   capture_output=True, text=True)
             if verify.returncode == 0:
                 print(f"\n文件信息:\n{verify.stdout}")
-        except:
-            pass
+        except Exception as e:
+            print(f"验证失败: {e}")
     else:
         print(f"\n❌ 打包失败: {result.stderr[-500:]}")
         sys.exit(1)
