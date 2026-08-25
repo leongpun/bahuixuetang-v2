@@ -1,12 +1,12 @@
 """
-学习进度追踪
+ProgressTrack
 """
 from datetime import datetime
 from core.storage.database import StudyDatabase
 
 
 class ProgressTracker:
-    """学习进度追踪器"""
+    """ProgressTrack"""
 
     def __init__(self, db=None):
         self.db = db or StudyDatabase()
@@ -21,13 +21,13 @@ class ProgressTracker:
         self.db.save_progress(subject, grade, term, chapter, lesson, None, "completed", 100)
 
     def get_dashboard(self):
-        """获取学习仪表盘数据"""
+        """GetStudyInstrumentTableDiskData"""
         all_progress = self.db.get_all_progress()
         completed = sum(1 for p in all_progress if p["status"] == "completed")
         in_progress = sum(1 for p in all_progress if p["status"] == "in_progress")
         recent = sorted(all_progress, key=lambda x: x.get("last_watched", ""), reverse=True)[:10]
         
-        # 统计章节总数（唯一章节组合）
+        # StatisticsChapterTotalCount（UniqueChapterCombine）
         chapter_keys = set()
         for p in all_progress:
             key = (p["subject_code"], p["grade"], p["term"], p["chapter"])

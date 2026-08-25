@@ -1,5 +1,5 @@
 """
-本地资源索引 - 缓存E盘扫描结果，避免重复IO
+Local ResourcesIndex - CacheStoreEDiskScanResult，AvoidAgainDuplicateIO
 """
 import json
 import time
@@ -32,7 +32,7 @@ class ResourceIndex:
         self.index_file.write_text(json.dumps(self._data, ensure_ascii=False, indent=2), encoding="utf-8")
 
     def scan_external_drives(self, search_paths):
-        """扫描外部资源路径，构建索引"""
+        """ScanExternal Resource Paths，BuildIndex"""
         index = {"scanned_at": datetime.now().isoformat(), "paths": {}, "videos": {}, "pdfs": {}}
         for base_path in search_paths:
             base = Path(base_path)
@@ -69,7 +69,7 @@ class ResourceIndex:
         return index
 
     def find_video(self, keyword):
-        """按关键词搜索本地视频"""
+        """ByKeywordSearchLocalVideo"""
         self._load()
         results = []
         for path, info in self._data.get("videos", {}).items():
@@ -78,7 +78,7 @@ class ResourceIndex:
         return results
 
     def find_pdf(self, keyword):
-        """按关键词搜索本地PDF"""
+        """ByKeywordSearchLocalPDF"""
         self._load()
         results = []
         for path, info in self._data.get("pdfs", {}).items():
@@ -95,11 +95,11 @@ class ResourceIndex:
         return list(self._data.get("pdfs", {}).values())
 
     def is_available(self, path):
-        """检查文件是否存在"""
+        """CheckFileYesNoStoreIn"""
         return os.path.exists(path)
 
     def refresh(self, search_paths):
-        """强制刷新索引"""
+        """ForceSystemRefreshIndex"""
         self._data = {}
         self._loaded = False
         return self.scan_external_drives(search_paths)

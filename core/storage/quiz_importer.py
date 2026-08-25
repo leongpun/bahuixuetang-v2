@@ -1,6 +1,6 @@
 """
-题库导入模块 - 支持多种格式导入
-格式：JSON、Excel、Word(.docx)、PDF
+Question BankImportModule - SupportMoreTypeFormatImport
+Format：JSON、Excel、Word(.docx)、PDF
 """
 import json
 import os
@@ -11,28 +11,28 @@ from pathlib import Path
 
 @dataclass
 class Question:
-    """题目数据结构"""
+    """QuestionDataStructure"""
     id: str
-    subject: str  # 学科
-    grade: str    # 年级
-    chapter: str  # 章节
-    question_type: str  # 题型：单选/多选/判断/填空
-    question: str  # 题目内容
-    options: List[str] = None  # 选项（选择题）
-    answer: str = ""  # 答案
-    explanation: str = ""  # 解析
-    source: str = ""  # 来源文件
+    subject: str  # Subject
+    grade: str    # Grade
+    chapter: str  # Chapter
+    question_type: str  # QuestionType：Single Choice/MoreSelect/Judge/Fill-in-blank
+    question: str  # QuestionInsideContent
+    options: List[str] = None  # Option（SelectQuestion）
+    answer: str = ""  # Answer
+    explanation: str = ""  # Explanation
+    source: str = ""  # SourceFile
 
 
 class QuizImporter:
-    """题库导入器"""
+    """Question BankImport"""
     
     def __init__(self):
         self.questions: List[Question] = []
         self.import_history = []
     
     def import_file(self, filepath: str) -> Dict:
-        """导入单个文件，返回结果"""
+        """ImportSingleItemFile，BackResult"""
         ext = Path(filepath).suffix.lower()
         
         try:
@@ -45,17 +45,17 @@ class QuizImporter:
             elif ext == '.pdf':
                 return self._import_pdf(filepath)
             else:
-                return {"success": False, "error": f"不支持的格式: {ext}"}
+                return {"success": False, "error": f"NotSupportFormat: {ext}"}
         except Exception as e:
             import traceback
-            error_msg = f"导入失败: {str(e)}"
-            print(f"[DEBUG] 导入错误: {error_msg}")
-            print(f"[DEBUG] 堆栈: {traceback.format_exc()}")
+            error_msg = f"ImportFailed: {str(e)}"
+            print(f"[DEBUG] ImportError: {error_msg}")
+            print(f"[DEBUG] Stack: {traceback.format_exc()}")
             return {"success": False, "error": error_msg}
     
     def _import_json(self, filepath: str) -> Dict:
-        """导入JSON格式题库"""
-        # 尝试多种编码
+        """ImportJSONFormatQuestion Bank"""
+        # TryMoreEncoding Type
         encodings = ['utf-8', 'utf-8-sig', 'gbk', 'gb2312', 'gb18030', 'latin-1']
         
         data = None
@@ -71,7 +71,7 @@ class QuizImporter:
                 continue
         
         if data is None:
-            return {"success": False, "error": f"无法解析JSON文件，尝试的编码: {', '.join(encodings)}"}
+            return {"success": False, "error": f"CannotExplanationJSONFile，TryEncoding: {', '.join(encodings)}"}
         
         questions = []
         if isinstance(data, list):
@@ -96,11 +96,11 @@ class QuizImporter:
         return {"success": True, "count": len(questions), "questions": questions}
     
     def _import_excel(self, filepath: str) -> Dict:
-        """导入Excel格式题库"""
+        """ImportExcelFormatQuestion Bank"""
         try:
             import openpyxl
         except ImportError:
-            return {"success": False, "error": "需要安装 openpyxl: pip install openpyxl"}
+            return {"success": False, "error": "Need To Install openpyxl: pip install openpyxl"}
         
         wb = openpyxl.load_workbook(filepath)
         ws = wb.active
@@ -123,16 +123,16 @@ class QuizImporter:
         return {"success": True, "count": len(questions), "questions": questions}
     
     def _import_docx(self, filepath: str) -> Dict:
-        """导入Word格式题库"""
+        """ImportWordFormatQuestion Bank"""
         try:
             from docx import Document
         except ImportError:
-            return {"success": False, "error": "需要安装 python-docx: pip install python-docx"}
+            return {"success": False, "error": "Need To Install python-docx: pip install python-docx"}
         
         doc = Document(filepath)
         questions = []
         
-        # 按段落解析
+        # ByParagraphExplanation
         text = "\n".join([p.text for p in doc.paragraphs])
         q_list = self._extract_questions_from_text(text)
         
@@ -150,11 +150,11 @@ class QuizImporter:
         return {"success": True, "count": len(questions), "questions": questions}
     
     def _import_pdf(self, filepath: str) -> Dict:
-        """导入PDF格式题库"""
+        """ImportPDFFormatQuestion Bank"""
         try:
             import pdfplumber
         except ImportError:
-            return {"success": False, "error": "需要安装 pdfplumber: pip install pdfplumber"}
+            return {"success": False, "error": "Need To Install pdfplumber: pip install pdfplumber"}
         
         questions = []
         
@@ -176,19 +176,19 @@ class QuizImporter:
         return {"success": True, "count": len(questions), "questions": questions}
     
     def _extract_questions_from_text(self, text: str) -> List[Dict]:
-        """从文本中提取题目"""
+        """FromTextInExtractQuestion"""
         import re
         
         questions = []
-        # 匹配题目格式：数字+题号+题目内容
-        pattern = r'(\d+)[\.、）\)]\s*([^0-9][^答选项]*?)(?=答案|[（\(]|$)'
+        # MatchQuestionFormat：CountCharacter+QuestionNumber+QuestionInsideContent
+        pattern = r'(\d+)[\.、）\)]\s*([^0-9][^AnswerOption]*?)(?=Answer|[（\(]|$)'
         
         for match in re.finditer(pattern, text, re.DOTALL):
             q_num = match.group(1)
             q_text = match.group(2).strip()[:200]
             
-            # 尝试提取答案
-            answer_match = re.search(r'答案[:：]?\s*([A-Dabcd])', q_text)
+            # TryExtractAnswer
+            answer_match = re.search(r'Answer[:：]?\s*([A-Dabcd])', q_text)
             answer = answer_match.group(1) if answer_match else ""
             
             questions.append({
@@ -202,19 +202,19 @@ class QuizImporter:
         return questions
     
     def _parse_question(self, item: Dict, source: str = "") -> Optional[Question]:
-        """解析题目数据"""
+        """ExplanationQuestionData"""
         try:
-            # 获取题目内容 - 兼容多种格式
+            # GetQuestionInsideContent - CompatibleContentMoreTypeFormat
             question_text = ""
             
-            # 格式1: 直接字段
+            # Format1: DirectField
             if 'question' in item:
                 question_text = item['question']
-            elif '题干' in item:
-                question_text = item['题干']
+            elif 'QuestionDry' in item:
+                question_text = item['QuestionDry']
             elif 'title' in item:
                 question_text = item['title']
-            # 格式2: 嵌套结构（如教育类API）
+            # Format2: NestedStructure（Such AsEducationalAPI）
             elif 'question_info' in item and isinstance(item['question_info'], dict):
                 q_info = item['question_info']
                 question_text = q_info.get('raw_content', '') or q_info.get('content', '') or q_info.get('question', '')
@@ -222,42 +222,42 @@ class QuizImporter:
             if not question_text:
                 return None
             
-            # 获取选项
+            # GetOption
             options = []
             if 'options' in item:
                 options = item['options']
-            elif '选项' in item:
-                options = item['选项']
+            elif 'Option' in item:
+                options = item['Option']
             elif 'answer_options' in item:
                 options = item['answer_options']
             if isinstance(options, str):
                 options = [options]
             
-            # 获取答案
+            # GetAnswer
             answer = ""
             if 'answer' in item:
                 answer = item['answer']
-            elif '答案' in item:
-                answer = item['答案']
+            elif 'Answer' in item:
+                answer = item['Answer']
             elif 'answer_info' in item and isinstance(item['answer_info'], dict):
                 answer = item['answer_info'].get('raw_content', '') or item['answer_info'].get('content', '')
             
-            # 获取学科
-            subject = item.get('subject', item.get('学科', ''))
+            # GetSubject
+            subject = item.get('subject', item.get('Subject', ''))
             if not subject and 'course' in item:
                 subject = item['course']
             
-            # 获取年级
-            grade = item.get('grade', item.get('年级', ''))
+            # GetGrade
+            grade = item.get('grade', item.get('Grade', ''))
             
-            # 获取题型
-            question_type = item.get('question_type', item.get('题型', '未知'))
-            if not question_type or question_type == '未知':
+            # GetQuestionType
+            question_type = item.get('question_type', item.get('QuestionType', 'Not yetKnowledge'))
+            if not question_type or question_type == 'Not yetKnowledge':
                 if 'type' in item:
                     question_type = item['type']
             
-            # 获取解析
-            explanation = item.get('explanation', item.get('解析', ''))
+            # GetExplanation
+            explanation = item.get('explanation', item.get('Explanation', ''))
             if not explanation and 'solution_info' in item:
                 sol = item['solution_info']
                 if isinstance(sol, list) and len(sol) > 0:
@@ -266,14 +266,14 @@ class QuizImporter:
                 elif isinstance(sol, dict):
                     explanation = sol.get('solution_info', '') or sol.get('content', '')
             
-            # 生成ID - 优先使用JSON中的原始ID
+            # GenerateID - PriorityUseJSONInOriginalID
             q_id = item.get('id', f"import_{int(__import__('time').time()*1000)}_{len(self.questions)}")
             
             return Question(
                 id=q_id,
                 subject=str(subject),
                 grade=str(grade),
-                chapter=item.get('chapter', item.get('章节', '')),
+                chapter=item.get('chapter', item.get('Chapter', '')),
                 question_type=str(question_type)[:20],
                 question=str(question_text)[:500],
                 options=options if isinstance(options, list) else [],
@@ -289,11 +289,11 @@ class QuizImporter:
         return datetime.now().strftime("%Y-%m-%d %H:%M")
     
     def get_all_questions(self) -> List[Dict]:
-        """获取所有题目（用于保存）"""
+        """Get AllQuestion（Used ForSave）"""
         return [asdict(q) for q in self.questions]
     
     def save_to_db(self, db_path: str):
-        """保存到数据库"""
+        """SaveToDataLibrary"""
         import sqlite3
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()

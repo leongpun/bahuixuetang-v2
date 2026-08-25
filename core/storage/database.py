@@ -1,5 +1,5 @@
 """
-SQLite数据库封装 - 学习进度、错题本、收藏
+SQLiteDataLibraryEncapsulate - Progress、Error Book、Favorite
 """
 import sqlite3
 import json
@@ -19,9 +19,9 @@ class StudyDatabase:
         return conn
 
     def _init_tables(self):
-        """初始化所有表"""
+        """InitializeAllHaveTable"""
         with self._get_conn() as conn:
-            # 学习进度表
+            # ProgressTable
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS study_progress (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,7 +39,7 @@ class StudyDatabase:
                     UNIQUE(subject_code, grade, term, chapter, lesson_name)
                 )
             """)
-            # 错题本表
+            # Error BookTable
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS error_book (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -58,7 +58,7 @@ class StudyDatabase:
                     resolved BOOLEAN DEFAULT 0
                 )
             """)
-            # 收藏表
+            # FavoriteTable
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS favorites (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,7 +71,7 @@ class StudyDatabase:
                     UNIQUE(subject_code, grade, term, lesson_name)
                 )
             """)
-            # AI诊断记录表
+            # AI DiagnosisRecordTable
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS ai_diagnosis (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -85,7 +85,7 @@ class StudyDatabase:
             """)
             conn.commit()
 
-    # ===== 学习进度操作 =====
+    # ===== ProgressOperation =====
     def save_progress(self, subject, grade, term, chapter, lesson, resource_path=None, status="in_progress", pct=0):
         with self._get_conn() as conn:
             conn.execute("""
@@ -122,7 +122,7 @@ class StudyDatabase:
         completed = sum(1 for p in progress if p["status"] == "completed" and p["progress_pct"] >= 100)
         return round(completed / len(progress) * 100, 1)
 
-    # ===== 错题本操作 =====
+    # ===== Error BookOperation =====
     def add_error(self, subject, grade, chapter, question, options=None, correct=None, user_ans=None, analysis=None, difficulty=1):
         with self._get_conn() as conn:
             conn.execute("""
@@ -159,7 +159,7 @@ class StudyDatabase:
             """).fetchone()
             return dict(row) if row else {}
 
-    # ===== 收藏操作 =====
+    # ===== FavoriteOperation =====
     def toggle_favorite(self, subject, grade, term, lesson, resource_path=None):
         with self._get_conn() as conn:
             try:
@@ -178,7 +178,7 @@ class StudyDatabase:
             rows = conn.execute("SELECT * FROM favorites ORDER BY created_at DESC").fetchall()
             return [dict(r) for r in rows]
 
-    # ===== AI诊断操作 =====
+    # ===== AI DiagnosisOperation =====
     def save_diagnosis(self, subject, grade, weakness, result, topics):
         with self._get_conn() as conn:
             conn.execute("""

@@ -1,5 +1,5 @@
 """
-本地资源扫描器 - 动态扫描E盘等外部路径
+Local ResourcesScan - DynamicScanEDiskExternalPath
 """
 import os
 import json
@@ -8,22 +8,22 @@ from datetime import datetime
 
 
 class LocalResourceScanner:
-    """扫描本地视频/PDF资源，构建课程-文件映射"""
+    """ScanLocalVideo/PDFResource，BuildCourse-FileMap"""
 
     def __init__(self):
         self._cache = {}
         self._last_scan_time = 0
         self._search_paths = [
-            Path(r"E:\空中课堂"),
-            Path(r"E:\初中课本"),
+            Path(r"E:\AirClass"),
+            Path(r"E:\JuniorHighTextbook"),
         ]
 
     def set_search_paths(self, paths):
-        """动态设置搜索路径（支持用户配置）"""
+        """DynamicSettingsSearchPath（SupportUserConfigure）"""
         self._search_paths = [Path(p) for p in paths if Path(p).exists()]
 
     def scan(self):
-        """执行完整扫描"""
+        """Execute CompleteScan"""
         result = {"videos": [], "pdfs": [], "scanned_at": datetime.now().isoformat(), "stats": {}}
         path_stats = {}
         for base_path in self._search_paths:
@@ -59,10 +59,10 @@ class LocalResourceScanner:
         return result
 
     def find_videos_by_subject_grade_term(self, subject, grade, term=None):
-        """按学科/年级/学期筛选视频"""
+        """BySubject/Grade/TermFilterVideo"""
         self._ensure_scanned()
         # subject code -> Chinese name mapping
-        subject_name_map = {"math": "数学", "chinese": "语文", "english": "英语"}
+        subject_name_map = {"math": "Math", "chinese": "Chinese", "english": "English"}
         subject_cn = subject_name_map.get(subject, subject)
         results = []
         for v in self._cache.get("videos", []):
@@ -75,7 +75,7 @@ class LocalResourceScanner:
         return results
 
     def find_pdf_by_subject_grade(self, subject, grade):
-        """按学科/年级查找课本PDF"""
+        """BySubject/GradeFindTextbookPDF"""
         self._ensure_scanned()
         results = []
         for p in self._cache.get("pdfs", []):
@@ -84,22 +84,22 @@ class LocalResourceScanner:
         return results
 
     def get_video(self, path):
-        """获取单个视频"""
+        """GetSingleItemVideo"""
         self._ensure_scanned()
         for v in self._cache.get("videos", []):
             if v["path"] == path:
                 return v
-        # 也可能不在缓存中，直接检查
+        # AlsoMayNotInCacheStoreIn，DirectCheck
         if os.path.exists(path):
             return {"filename": os.path.basename(path), "path": path, "type": "video", "size_mb": round(os.path.getsize(path) / 1024 / 1024, 1)}
         return None
 
     def _ensure_scanned(self):
-        """懒加载扫描"""
+        """LazyLoadScan"""
         if not self._cache:
             self.scan()
 
     def refresh(self):
-        """强制重新扫描"""
+        """ForceSystemAgainNewScan"""
         self._cache = {}
         return self.scan()

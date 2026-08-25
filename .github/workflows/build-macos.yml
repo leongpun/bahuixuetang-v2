@@ -1,4 +1,4 @@
-name: Build macOS App (Intel)
+name: Build macOS App (Intel x86_64)
 
 on:
   push:
@@ -8,40 +8,45 @@ on:
 
 jobs:
   build-macos:
-    runs-on: macos-latest
+    # 使用Intel架构的runner (macos-13 is x86_64, macos-latest is ARM64)
+    runs-on: macos-13
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Set up Python (Intel)
+    - name: Set up Python (Intel x86_64)
       uses: actions/setup-python@v5
       with:
         python-version: '3.12'
-        architecture: 'x64'  # 明确指定Intel架构
+        architecture: 'x64'
         
-    - name: Check system info
+    - name: Check system architecture
       run: |
+        echo "=== System Info ==="
         uname -m
+        sw_vers
+        echo ""
+        echo "=== Python Info ==="
         python3 --version
         file $(which python3)
+        python3 -c "import struct; print(f'Python struct size: {struct.calcsize(\"P\") * 8} bits')"
         
     - name: Install dependencies
       run: |
         pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pyinstaller==6.3.0
-        brew install ffmpeg
+        pip install pyinstaller==6.4.0
+        # Verify x86_64 architecture
+        python3 -c "import platform; assert platform.machine() == 'x86_64', f'Wrong arch: {platform.machine()}'"
+        echo "✓ Confirmed Intel x86_64 architecture"
         
     - name: Build macOS app (Intel x86_64)
       run: |
-        # 确保使用Intel架构的Python
-        export PATH=/usr/bin:/usr/local/bin:$PATH
+        # Clean previous builds
+        rm -rf build dist *.spec
         
-        # 清理之前的构建
-        rm -rf build dist
-        
-        # 使用PyInstaller构建，指定Intel架构
+        # Build with PyInstaller
         python3 -m PyInstaller \
           --onefile \
           --windowed \
@@ -51,18 +56,35 @@ jobs:
           --noconfirm \
           run_app.py
         
-        # 验证产物架构
-        echo "=== 产物信息 ==="
+        # Verify output architecture
+        echo "=== Output Verification ==="
+        ls -lh dist/
         file dist/柏慧学堂
-        lipo -info dist/柏慧学堂 2>/dev/null || echo "单架构二进制"
+        lipo -info dist/柏慧学堂 2>/dev/null || echo "Single architecture binary"
+        
+        # Ensure it's x86_64
+        if file dist/柏慧学堂 | grep -q "x86_64"; then
+          echo "✓ Confirmed Intel x86_64 binary"
+        else
+          echo "⚠️ Architecture check needed"
+          file dist/柏慧学堂
+        fi
         
     - name: Test application
       run: |
-        # 测试应用是否可以运行
-        ./dist/柏慧学堂 --version 2>/dev/null || echo "应用构建成功，可在iMac上运行"
+        # Test that app can be executed
+        if [ -f "dist/柏慧学堂" ]; then
+          echo "✓ Application built successfully"
+          echo "Size: $(ls -lh dist/柏慧学堂 | awk '{print $5}')"
+          ./dist/柏慧学堂 --help 2>/dev/null || echo "App built (may exit with no args)"
+        else
+          echo "❌ Build failed"
+          exit 1
+        fi
         
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: 柏慧学堂-macOS-Intel
+        name: 柏慧学堂-macOS-Intel-x86_64
         path: dist/柏慧学堂
+        retention-days: 30

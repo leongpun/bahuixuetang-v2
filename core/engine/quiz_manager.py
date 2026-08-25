@@ -1,5 +1,5 @@
 """
-题库管理模块 - 题目管理、检索、统计
+Question BankManageModule - QuestionManage、Retrieve、Statistics
 """
 import sqlite3
 import json
@@ -12,7 +12,7 @@ from core.storage.quiz_importer import Question
 
 @dataclass
 class QuizStats:
-    """题目统计数据"""
+    """QuestionStatisticsData"""
     total: int = 0
     by_subject: Dict[str, int] = None
     by_grade: Dict[str, int] = None
@@ -31,7 +31,7 @@ class QuizStats:
 
 
 class QuizManager:
-    """题库管理器"""
+    """Question BankManager"""
     
     def __init__(self, db_path=None):
         self.db_path = Path(db_path) if db_path else Path.home() / "柏慧学堂_data" / "quiz.db"
@@ -39,22 +39,22 @@ class QuizManager:
         self._init_tables()
     
     def _get_conn(self):
-        """获取数据库连接"""
+        """GetDataLibraryConnect"""
         conn = sqlite3.connect(str(self.db_path))
         conn.row_factory = sqlite3.Row
         return conn
     
     def _init_tables(self):
-        """初始化数据库表"""
+        """Initialize DataLibraryTable"""
         with self._get_conn() as conn:
-            # 题目表
+            # QuestionTable
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS questions (
                     id TEXT PRIMARY KEY,
                     subject TEXT NOT NULL,
                     grade TEXT NOT NULL,
                     chapter TEXT,
-                    question_type TEXT DEFAULT '未知',
+                    question_type TEXT DEFAULT 'Not yetKnowledge',
                     question TEXT NOT NULL,
                     options TEXT,
                     answer TEXT,
@@ -63,7 +63,7 @@ class QuizManager:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
-            # 导入历史表
+            # ImportHistoryTable
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS import_history (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,9 +76,9 @@ class QuizManager:
             """)
             conn.commit()
     
-    # ===== 导入相关 =====
+    # ===== ImportRelated =====
     def import_questions(self, filepath: str) -> Dict:
-        """导入题目文件，返回结果"""
+        """ImportQuestionFile，BackResult"""
         from core.storage.quiz_importer import QuizImporter
         
         importer = QuizImporter()
@@ -89,10 +89,10 @@ class QuizManager:
         
         questions = result.get("questions", [])
         
-        # 保存到数据库
+        # SaveToDataLibrary
         saved = self._save_questions(questions)
         
-        # 记录导入历史
+        # RecordImportHistory
         with self._get_conn() as conn:
             conn.execute("""
                 INSERT INTO import_history (file_path, question_count, success, error_msg)
@@ -108,7 +108,7 @@ class QuizManager:
         }
     
     def _save_questions(self, questions: List[Question]) -> int:
-        """保存题目到数据库"""
+        """SaveQuestionToDataLibrary"""
         saved = 0
         with self._get_conn() as conn:
             for q in questions:
@@ -124,12 +124,12 @@ class QuizManager:
                     ))
                     saved += 1
                 except Exception as e:
-                    print(f"保存题目失败: {e}")
+                    print(f"SaveQuestionFailed: {e}")
         return saved
     
-    # ===== 查询相关 =====
+    # ===== QueryRelated =====
     def get_question(self, question_id: str) -> Optional[Dict]:
-        """获取单个题目"""
+        """GetSingleItemQuestion"""
         with self._get_conn() as conn:
             row = conn.execute("SELECT * FROM questions WHERE id=?", (question_id,)).fetchone()
             if row:
@@ -145,7 +145,7 @@ class QuizManager:
         limit: int = 100,
         offset: int = 0
     ) -> List[Dict]:
-        """查询题目列表（支持筛选）"""
+        """QueryQuestionList（SupportFilter）"""
         conditions = []
         params = []
         
@@ -176,7 +176,7 @@ class QuizManager:
             return [self._row_to_dict(row) for row in rows]
     
     def search_questions(self, keyword: str, subject: Optional[str] = None, limit: int = 50) -> List[Dict]:
-        """搜索题目（按关键词）"""
+        """SearchQuestion（ByKeyword）"""
         with self._get_conn() as conn:
             query = """
                 SELECT * FROM questions 
@@ -194,45 +194,45 @@ class QuizManager:
             rows = conn.execute(query, params).fetchall()
             return [self._row_to_dict(row) for row in rows]
     
-    # ===== 统计相关 =====
+    # ===== StatisticsRelated =====
     def get_stats(self) -> QuizStats:
-        """获取题目统计信息"""
+        """GetQuestionStatisticsInfo"""
         stats = QuizStats()
         
         with self._get_conn() as conn:
-            # 总数
+            # TotalCount
             row = conn.execute("SELECT COUNT(*) as count FROM questions").fetchone()
             stats.total = row["count"] if row else 0
             
-            # 按学科统计
+            # BySubjectStatistics
             rows = conn.execute("SELECT subject, COUNT(*) as count FROM questions GROUP BY subject").fetchall()
             stats.by_subject = {r["subject"]: r["count"] for r in rows}
             
-            # 按年级统计
+            # ByGradeStatistics
             rows = conn.execute("SELECT grade, COUNT(*) as count FROM questions GROUP BY grade").fetchall()
             stats.by_grade = {r["grade"]: r["count"] for r in rows}
             
-            # 按章节统计
+            # ByChapterStatistics
             rows = conn.execute("SELECT chapter, COUNT(*) as count FROM questions WHERE chapter IS NOT NULL AND chapter != '' GROUP BY chapter").fetchall()
             stats.by_chapter = {r["chapter"]: r["count"] for r in rows}
             
-            # 按题型统计
+            # ByQuestionTypeStatistics
             rows = conn.execute("SELECT question_type, COUNT(*) as count FROM questions GROUP BY question_type").fetchall()
             stats.by_type = {r["question_type"]: r["count"] for r in rows}
         
         return stats
     
     def get_subject_stats(self, subject: str) -> Dict:
-        """获取学科维度的统计"""
+        """GetSubjectDimensionStatistics"""
         with self._get_conn() as conn:
-            # 各年级数量
+            # EachGradeCountQuantity
             rows = conn.execute(
                 "SELECT grade, COUNT(*) as count FROM questions WHERE subject=? GROUP BY grade",
                 (subject,)
             ).fetchall()
             by_grade = {r["grade"]: r["count"] for r in rows}
             
-            # 各题型数量
+            # EachQuestionTypeCountQuantity
             rows = conn.execute(
                 "SELECT question_type, COUNT(*) as count FROM questions WHERE subject=? GROUP BY question_type",
                 (subject,)
@@ -245,7 +245,7 @@ class QuizManager:
                 "by_type": by_type
             }
     
-    # ===== 随机抽题 =====
+    # ===== RandomQuestion =====
     def get_random_questions(
         self,
         subject: str,
@@ -253,7 +253,7 @@ class QuizManager:
         count: int = 10,
         exclude_ids: Optional[List[str]] = None
     ) -> List[Dict]:
-        """随机抽取题目"""
+        """RandomFetchQuestion"""
         with self._get_conn() as conn:
             query = "SELECT * FROM questions WHERE subject=? AND grade=?"
             params = [subject, grade]
@@ -276,7 +276,7 @@ class QuizManager:
         chapter: str,
         limit: int = 20
     ) -> List[Dict]:
-        """获取指定章节的题目"""
+        """GetPointDefineChapterQuestion"""
         with self._get_conn() as conn:
             rows = conn.execute(
                 """SELECT * FROM questions 
@@ -286,24 +286,24 @@ class QuizManager:
             ).fetchall()
             return [self._row_to_dict(row) for row in rows]
     
-    # ===== 删除相关 =====
+    # ===== DeleteRelated =====
     def delete_question(self, question_id: str) -> bool:
-        """删除题目"""
+        """DeleteQuestion"""
         with self._get_conn() as conn:
             cursor = conn.execute("DELETE FROM questions WHERE id=?", (question_id,))
             conn.commit()
             return cursor.rowcount > 0
     
     def delete_questions_by_source(self, source: str) -> int:
-        """按来源删除题目"""
+        """BySourceDeleteQuestion"""
         with self._get_conn() as conn:
             cursor = conn.execute("DELETE FROM questions WHERE source=?", (source,))
             conn.commit()
             return cursor.rowcount
     
-    # ===== 导入历史 =====
+    # ===== ImportHistory =====
     def get_import_history(self, limit: int = 20) -> List[Dict]:
-        """获取导入历史记录"""
+        """GetImportHistoryRecord"""
         with self._get_conn() as conn:
             rows = conn.execute(
                 "SELECT * FROM import_history ORDER BY imported_at DESC LIMIT ?",
@@ -312,14 +312,14 @@ class QuizManager:
             return [dict(r) for r in rows]
     
     def clear_import_history(self):
-        """清空导入历史"""
+        """ClearImportHistory"""
         with self._get_conn() as conn:
             conn.execute("DELETE FROM import_history")
             conn.commit()
     
-    # ===== 工具方法 =====
+    # ===== ToolsMethod =====
     def _row_to_dict(self, row: sqlite3.Row) -> Dict:
-        """将数据库行转换为字典"""
+        """WillDataDB RowConvert ToCharacterExample"""
         d = dict(row)
         if d.get("options"):
             try:
@@ -329,19 +329,19 @@ class QuizManager:
         return d
     
     def question_exists(self, question_id: str) -> bool:
-        """检查题目是否存在"""
+        """CheckQuestionYesNoStoreIn"""
         with self._get_conn() as conn:
             row = conn.execute("SELECT 1 FROM questions WHERE id=?", (question_id,)).fetchone()
             return row is not None
     
     def get_all_subjects(self) -> List[str]:
-        """获取所有学科列表"""
+        """Get AllSubjectList"""
         with self._get_conn() as conn:
             rows = conn.execute("SELECT DISTINCT subject FROM questions WHERE subject!='' ORDER BY subject").fetchall()
             return [r["subject"] for r in rows]
     
     def get_all_grades(self, subject: Optional[str] = None) -> List[str]:
-        """获取所有年级列表"""
+        """Get AllGradeList"""
         with self._get_conn() as conn:
             if subject:
                 rows = conn.execute(
@@ -355,7 +355,7 @@ class QuizManager:
             return [r["grade"] for r in rows]
     
     def get_all_chapters(self, subject: str, grade: str) -> List[str]:
-        """获取指定学科年级的所有章节"""
+        """GetPointDefineSubjectGrade's AllChapter"""
         with self._get_conn() as conn:
             rows = conn.execute(
                 "SELECT DISTINCT chapter FROM questions WHERE subject=? AND grade=? AND chapter!='' ORDER BY chapter",

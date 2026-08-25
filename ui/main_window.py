@@ -1,11 +1,11 @@
 """
-主窗口 - 整体布局
+Main Window - Overall Layout
 """
 import customtkinter as ctk
 import sys
 from pathlib import Path
 
-# 添加项目根目录到路径
+# AddProjectRootDirectoryToPath
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
@@ -20,51 +20,51 @@ from core.storage.database import StudyDatabase
 
 
 class MainWindow(ctk.CTk):
-    """柏慧学堂主窗口"""
+    """Baihuixuetang MainWindow"""
 
     def __init__(self):
         super().__init__()
         ensure_dirs()
         self.settings = load_settings()
 
-        # 窗口设置
+        # WindowSettings
         self.title(f"柏慧学堂 v{self.settings.get('version', '2.0.0')}")
         self.geometry("1200x800")
         self.minsize(1000, 700)
 
-        # 设置外观
+        # SettingsAppearance
         ctk.set_appearance_mode(self.settings.get("theme", "light"))
         ctk.set_default_color_theme("blue")
 
-        # 初始化数据
+        # Initialize Data
         self.db = StudyDatabase()
         self.tracker = ProgressTracker(self.db)
 
-        # 构建UI
+        # Build UI
         self._build_layout()
         self._load_recent()
 
     def _build_layout(self):
-        """构建主布局"""
-        # 主框架
+        """Build Main Layout"""
+        # Main Frame
         main_frame = ctk.CTkFrame(self)
         main_frame.pack(fill="both", expand=True)
 
-        # 左侧导航栏
+        # Left Sidebar
         self._build_sidebar(main_frame)
 
-        # 右侧内容区
+        # Right Content Area
         self.content_frame = ctk.CTkFrame(main_frame, fg_color=COLORS["bg_light"])
         self.content_frame.pack(side="right", fill="both", expand=True, padx=5, pady=5)
 
-        # 顶部工具栏
+        # Top Toolbar
         self._build_toolbar()
 
-        # 内容区域（多页面）
+        # Content Area（MorePagePage）
         self._build_content_area()
 
     def _build_sidebar(self, parent):
-        """左侧边栏"""
+        """LeftEdgeBar"""
         sidebar = ctk.CTkFrame(parent, width=SIDEBAR["width"], fg_color=SIDEBAR["bg_color"])
         sidebar.pack(side="left", fill="y")
         sidebar.pack_propagate(False)
@@ -80,18 +80,18 @@ class MainWindow(ctk.CTk):
         ).pack()
         ctk.CTkLabel(
             logo_frame,
-            text="初中离线自学",
+            text="Junior Offline Study",
             font=FONTS["small"],
             text_color="#888888",
         ).pack()
 
-        # 导航按钮
+        # Navigation Buttons
         nav_items = [
-            ("📖", "课程学习", "courses"),
-            ("📝", "题库练习", "quiz"),
-            ("🤖", "AI诊断", "ai"),
-            ("📕", "错题本", "error_book"),
-            ("⚙️", "设置", "settings"),
+            ("📖", "Courses", "courses"),
+            ("📝", "Quiz", "quiz"),
+            ("🤖", "AI Diagnosis", "ai"),
+            ("📕", "Error Book", "error_book"),
+            ("⚙️", "Settings", "settings"),
         ]
 
         for icon, text, page in nav_items:
@@ -108,39 +108,39 @@ class MainWindow(ctk.CTk):
             )
             btn.pack(fill="x", padx=10)
 
-        # 课程选择器（下拉筛选）
+        # CourseSelect（DropdownFilter）
         self.course_selector = CourseSelectorWidget(sidebar)
         self.course_selector.pack(fill="both", expand=True, padx=0, pady=10)
         self.course_selector.set_callback(self._on_course_selected)
 
     def _build_toolbar(self):
-        """顶部工具栏"""
+        """Top Toolbar"""
         toolbar = ctk.CTkFrame(self.content_frame, fg_color=COLORS["primary"], height=45)
         toolbar.pack(fill="x")
         toolbar.pack_propagate(False)
 
-        # 标题
+        # Title
         self.toolbar_title = ctk.CTkLabel(
             toolbar,
-            text="课程学习",
+            text="Courses",
             font=FONTS["heading"],
             text_color=COLORS["white"],
         )
         self.toolbar_title.pack(side="left", padx=20)
 
-        # 网络状态
+        # Network Status
         self.net_status = ctk.CTkLabel(
             toolbar,
-            text="🌐 检测中...",
+            text="🌐 Checking......",
             font=FONTS["small"],
             text_color=COLORS["white"],
         )
         self.net_status.pack(side="right", padx=20)
 
-        # 刷新按钮
+        # RefreshByButton
         ctk.CTkButton(
             toolbar,
-            text="🔄 刷新",
+            text="🔄 Refresh",
             font=FONTS["small"],
             fg_color="transparent",
             text_color=COLORS["white"],
@@ -151,57 +151,57 @@ class MainWindow(ctk.CTk):
         ).pack(side="right", padx=10)
 
     def _build_content_area(self):
-        """内容区域"""
-        # 课程学习页
+        """Content Area"""
+        # CoursesPage
         self.courses_page = ctk.CTkFrame(self.content_frame, fg_color=COLORS["bg_light"])
         self._build_courses_page(self.courses_page)
 
-        # 导入设置页面
+        # Settings Page
         from ui.settings_page import SettingsPage
         from core.engine.quiz_manager import QuizManager
         from ui.components.quiz_panel import QuizPanel
         
-        # 导入AI聊天面板
+        # AI Chat Panel
         from ui.components.ai_chat_panel import AIChatPanel
         
-        # 初始化题库管理器
+        # Initialize Quiz Manager
         self.quiz_manager = QuizManager()
         
-        # 题库练习页
+        # QuizPage
         self.quiz_page = QuizPanel(self.content_frame, quiz_manager=self.quiz_manager)
         self.ai_page = AIChatPanel(self.content_frame)
-        self.error_book_page = self._create_placeholder("📕 错题本\n\n功能开发中...")
+        self.error_book_page = self._create_placeholder("📕 Error Book\n\nFeature in development...")
         self.settings_page = SettingsPage(self.content_frame)
 
-        # 默认显示课程页
+        # Default to Course Page
         self.current_page = self.courses_page
         self.current_page.pack(fill="both", expand=True)
 
     def _build_courses_page(self, parent):
-        """课程学习页布局 - 左视频+课时，右AI答疑"""
-        # 外层容器
+        """CoursesPageLayout - LeftVideo+Lesson，RightAIQ&A"""
+        # Outer LayerContent
         main_container = ctk.CTkFrame(parent, fg_color="transparent")
         main_container.pack(fill="both", expand=True, padx=10, pady=10)
 
-        # 左侧区域（50%宽度）
+        # LeftArea（50%Width）
         left_panel = ctk.CTkFrame(main_container, fg_color="transparent")
         left_panel.pack(side="left", fill="both", expand=True, padx=(0, 3))
 
-        # 左上：视频播放器
+        # LeftOn：VideoPlay
         video_frame = ctk.CTkFrame(left_panel, fg_color="white", corner_radius=8)
         video_frame.pack(fill="both", expand=True, pady=(0, 5))
 
-        ctk.CTkLabel(video_frame, text="📺 视频学习",
+        ctk.CTkLabel(video_frame, text="📺 VideoStudy",
                      font=FONTS["heading"]).pack(anchor="w", padx=10, pady=5)
 
         self.video_player = VideoPlayer(video_frame)
         self.video_player.pack(fill="both", expand=True, padx=10, pady=5)
 
-        # 左下：课时列表
+        # LeftBelow：LessonList
         lesson_frame = ctk.CTkFrame(left_panel, fg_color="white", corner_radius=8)
         lesson_frame.pack(fill="both", expand=True, pady=(5, 0))
 
-        ctk.CTkLabel(lesson_frame, text="📋 课时列表",
+        ctk.CTkLabel(lesson_frame, text="📋 LessonList",
                      font=FONTS["body"]).pack(anchor="w", padx=10, pady=5)
 
         self.lesson_listbox = ctk.CTkScrollableFrame(
@@ -209,20 +209,20 @@ class MainWindow(ctk.CTk):
         )
         self.lesson_listbox.pack(fill="both", expand=True, padx=10, pady=5)
 
-        # 右侧区域（50%宽度）- AI答疑
+        # RightSideArea（50%Width）- AIQ&A
         right_panel = ctk.CTkFrame(main_container, fg_color="white", corner_radius=8)
         right_panel.pack(side="right", fill="both", expand=True)
 
-        ctk.CTkLabel(right_panel, text="🤖 AI答疑",
+        ctk.CTkLabel(right_panel, text="🤖 AIQ&A",
                      font=FONTS["heading"]).pack(anchor="w", padx=10, pady=5)
 
-        # 集成AI答疑面板
+        # IntegrateAIQ&APanel
         from ui.components.ai_chat_panel import AIChatPanel
         self.ai_panel = AIChatPanel(right_panel)
         self.ai_panel.pack(fill="both", expand=True, padx=5, pady=(0, 5))
 
     def _create_placeholder(self, text):
-        """创建占位页面"""
+        """Create PlaceholderPagePage"""
         page = ctk.CTkFrame(self.content_frame, fg_color=COLORS["bg_light"])
         label = ctk.CTkLabel(
             page,
@@ -235,13 +235,13 @@ class MainWindow(ctk.CTk):
 
 
     def _switch_page(self, page_name):
-        """切换页面"""
+        """SwitchPagePage"""
         pages = {
-            "courses": (self.courses_page, "课程学习"),
-            "quiz": (self.quiz_page, "题库练习"),
-            "ai": (self.ai_page, "AI诊断"),
-            "error_book": (self.error_book_page, "错题本"),
-            "settings": (self.settings_page, "设置"),
+            "courses": (self.courses_page, "Courses"),
+            "quiz": (self.quiz_page, "Quiz"),
+            "ai": (self.ai_page, "AI Diagnosis"),
+            "error_book": (self.error_book_page, "Error Book"),
+            "settings": (self.settings_page, "Settings"),
         }
 
         if page_name in pages:
@@ -253,7 +253,7 @@ class MainWindow(ctk.CTk):
             self.toolbar_title.configure(text=title)
 
     def _on_course_selected(self, selection):
-        """课程选择回调（新：下拉筛选格式）"""
+        """CourseSelectCallback（New：DropdownFilterFormat）"""
         subject = selection.get("subject")
         grade = selection.get("grade")
         term = selection.get("term")
@@ -263,29 +263,29 @@ class MainWindow(ctk.CTk):
         self._load_course_content(subject, grade, term, chapter)
 
     def _play_video(self, video_path, lesson_title):
-        """播放视频"""
+        """PlayVideo"""
         self.video_player._play_video(video_path, lesson_title)
 
     def _load_course_content(self, subject, grade, term, chapter_label=None):
-        """加载课程学习内容 - 显示章节视频列表（靶向特定章节）"""
+        """LoadCoursesInsideContent - ShowChapterVideoList（Target SpecificChapter）"""
         from core.engine.course_selector import CourseSelector
         selector = CourseSelector()
 
-        # 获取所有章节数据
+        # Get AllChapterData
         all_chapters = selector.get_chapters(subject, grade, term)
         if not all_chapters:
             self.video_player.info_label.configure(
-                text=f"⚠️ {grade}{term} 暂无可用课程"
+                text=f"⚠️ {grade}{term} NoAvailableCourse"
             )
             return
 
-        # 清空课时列表
+        # ClearLessonList
         for widget in self.lesson_listbox.winfo_children():
             widget.destroy()
 
-        # 如果指定了章节，只展示该章节
+        # Such AsResultPointDefineChapter，OnlyShowTheChapter
         if chapter_label:
-            # 从下拉标签中提取章节名（格式："第X章-xxx (N节)"）
+            # FromDropdownLabelInExtractChapterName（Format："ThXChapter-xxx (NSection)"）
             ch_title = chapter_label.split(" (")[0]
             chapters = [ch for ch in all_chapters if ch["title"] == ch_title]
             if not chapters:
@@ -293,26 +293,26 @@ class MainWindow(ctk.CTk):
         else:
             chapters = all_chapters
 
-        # 更新播放器信息
+        # MoreNewPlayInfo
         self.video_player.info_label.configure(
             text=f"📚 {subject} {grade}{term}\n{chapters[0]['title'] if chapters else ''}"
         )
 
-        # 显示章节和课时列表
+        # ShowChapterAndLessonList
         for idx, ch in enumerate(chapters):
             ch_title = ch["title"]
             videos = ch.get("videos", [])
 
-            # 章节标题
+            # ChapterTitle
             ch_label = ctk.CTkLabel(
                 self.lesson_listbox,
-                text=f"{'第' + ch_title if not ch_title.startswith('第') else ch_title}",
+                text=f"{'Th' + ch_title if not ch_title.startswith('Th') else ch_title}",
                 font=ctk.CTkFont(size=11, weight="bold"),
                 text_color="#2c3e50",
             )
             ch_label.pack(fill="x", padx=8, pady=(8, 4))
 
-            # 课时按钮
+            # LessonByButton
             for video in videos:
                 video_path = video.get("path", "")
                 video_title = video.get("title", video_path.split("/")[-1].replace(".mp4", ""))
@@ -331,23 +331,23 @@ class MainWindow(ctk.CTk):
                 )
                 btn.pack(fill="x", padx=8, pady=2)
 
-        # 更新进度显示
+        # MoreNewProgressShow
         progress = self.tracker.get_dashboard()
         self.progress_label.configure(
-            text=f"共 {progress['total_lessons']} 课时，已完成 {progress['completed']} 课时"
+            text=f"Total {progress['total_lessons']} Lesson，AlreadyDone {progress['completed']} Lesson"
         )
 
     def _load_recent(self):
-        """加载最近学习"""
-        pass  # TODO: 从数据库加载最近记录
+        """LoadRecentStudy"""
+        pass  # TODO: FromDataLibraryLoadRecentRecord
 
     def _refresh_data(self):
-        """刷新数据"""
-        self.net_status.configure(text="🔄 刷新中...")
-        self.after(500, lambda: self.net_status.configure(text="🌐 已连接"))
+        """RefreshData"""
+        self.net_status.configure(text="🔄 RefreshIn...")
+        self.after(500, lambda: self.net_status.configure(text="🌐 AlreadyConnect"))
 
     def run(self):
-        """运行应用"""
+        """RunShouldUse"""
         self.mainloop()
 
 

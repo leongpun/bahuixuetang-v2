@@ -1,4 +1,4 @@
-"""柏慧学堂 v2 - 主入口"""
+"""柏慧学堂 v2 - Main Entry"""
 import sys
 from pathlib import Path
 

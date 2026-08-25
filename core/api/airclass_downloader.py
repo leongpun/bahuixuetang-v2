@@ -1,5 +1,5 @@
 """
-上海空中课堂在线下载器
+OnSeaAirClassInLineDownload
 """
 import requests
 import os
@@ -10,20 +10,20 @@ from urllib.parse import quote
 
 
 class AirClassDownloader:
-    """上海空中课堂视频下载"""
+    """OnSeaAirClassVideoDownload"""
 
     BASE_URL = "https://shd-assets.eduyun.cn/onlineClass"
 
     def __init__(self, save_dir=None, timeout=30):
-        self.save_dir = Path(save_dir) if save_dir else Path.home() / "柏慧学堂数据" / "videos"
+        self.save_dir = Path(save_dir) if save_dir else Path.home() / "柏慧学堂Data" / "videos"
         self.save_dir.mkdir(parents=True, exist_ok=True)
         self.timeout = timeout
         self.session = requests.Session()
-        self.session.verify = False  # 上海教育云平台证书问题
+        self.session.verify = False  # OnSeaEducation CloudPlatformCertificateAskQuestion
         self.session.trust_env = False
 
     def get_course_list(self, stage, subject):
-        """获取课程列表"""
+        """GetCourseList"""
         try:
             url = f"{self.BASE_URL}/stage/stageInfo"
             params = {"stage": stage, "subject": subject}
@@ -33,11 +33,11 @@ class AirClassDownloader:
                 return data.get("data", [])
             return []
         except Exception as e:
-            print(f"获取课程列表失败: {e}")
+            print(f"GetCourseListFailed: {e}")
             return []
 
     def get_resource_url(self, resource_id):
-        """获取资源下载地址"""
+        """GetResourceDownloadAddress"""
         try:
             url = f"{self.BASE_URL}/resource/resourceInfo"
             params = {"resourceId": resource_id}
@@ -47,11 +47,11 @@ class AirClassDownloader:
                 return data.get("data", {})
             return {}
         except Exception as e:
-            print(f"获取资源信息失败: {e}")
+            print(f"GetResourceInfoFailed: {e}")
             return {}
 
     def download_video(self, lesson_info, output_path=None):
-        """下载单个视频"""
+        """DownloadSingleItemVideo"""
         try:
             # lesson_info should contain the download URL
             video_url = lesson_info.get("url") or lesson_info.get("downloadUrl")
@@ -82,9 +82,9 @@ class AirClassDownloader:
         except Exception as e:
             return False, str(e)
 
-    def update_courses(self, grade, subject, term="第一学期"):
-        """更新某个年级某学科的课程"""
-        stage_map = {"六年级": "6", "七年级": "7", "八年级": "8", "九年级": "9"}
+    def update_courses(self, grade, subject, term="Term 1"):
+        """MoreNewSomeItemGradeSomeSubjectCourse"""
+        stage_map = {"Grade 6": "6", "Grade 7": "7", "Grade 8": "8", "Grade 9": "9"}
         stage = stage_map.get(grade)
         if not stage:
             return []
@@ -102,5 +102,5 @@ class AirClassDownloader:
             ok, path = self.download_video(course)
             results.append({"title": title, "status": "downloaded" if ok else "failed", "path": path if ok else ""})
             if ok:
-                time.sleep(1)  # 避免请求过快
+                time.sleep(1)  # AvoidPleaseRequest Too Fast
         return results

@@ -1,5 +1,5 @@
 """
-AI答疑面板 - 聊天式答疑界面
+AIQ&APanel - ChatTypeQ&AInterfacePage
 """
 import customtkinter as ctk
 import tkinter as tk
@@ -9,69 +9,69 @@ from typing import Optional
 
 
 class AIChatPanel(ctk.CTkFrame):
-    """AI答疑面板"""
+    """AIQ&APanel"""
     
     def __init__(self, parent, **kwargs):
         super().__init__(parent, **kwargs)
         
-        # 导入AI服务
+        # ImportAIService
         self.ai_service = None
         self._loading_widgets = {}
         try:
             from core.api.ai_service import AIService
             self.ai_service = AIService()
-            print(f"AI服务初始化成功, api_key={bool(self.ai_service.api_key)}")
+            print(f"AIServiceInitializeSuccess, api_key={bool(self.ai_service.api_key)}")
         except Exception as e:
-            print(f"AI服务初始化失败: {e}")
+            print(f"AIServiceInitializeFailed: {e}")
         
-        # 聊天历史
+        # ChatHistory
         self.chat_history = []
         
-        # 构建UI
+        # Build UI
         self._build_ui()
     
     def _build_ui(self):
-        """构建UI"""
-        # 主框架
+        """Build UI"""
+        # Main Frame
         main_frame = ctk.CTkFrame(self, fg_color="transparent")
         main_frame.pack(fill="both", expand=True)
         
-        # 标题栏
+        # TitleBar
         title_frame = ctk.CTkFrame(main_frame, fg_color="#f8f9fa", height=50)
         title_frame.pack(fill="x", padx=10, pady=(10, 5))
         title_frame.pack_propagate(False)
         
         ctk.CTkLabel(
             title_frame,
-            text="🤖 AI答疑助手",
+            text="🤖 AIQ&AAssistant",
             font=ctk.CTkFont(size=14, weight="bold"),
             text_color="#2c3e50"
         ).pack(side="left", padx=15, pady=10)
         
         ctk.CTkLabel(
             title_frame,
-            text="✅ 已连接",
+            text="✅ AlreadyConnect",
             font=ctk.CTkFont(size=11),
             text_color="#27ae60"
         ).pack(side="right", padx=15, pady=10)
         
-        # 聊天消息区域
+        # ChatMessageArea
         chat_frame = ctk.CTkFrame(main_frame, fg_color="white", corner_radius=10)
         chat_frame.pack(fill="both", expand=True, padx=10, pady=5)
         
-        # 消息滚动区域
+        # Message ScrollArea
         self.messages_frame = ctk.CTkScrollableFrame(chat_frame, fg_color="transparent")
         self.messages_frame.pack(fill="both", expand=True, padx=10, pady=10)
         
-        # 添加欢迎消息
-        self._add_message("assistant", "你好！我是柏慧学堂AI答疑助手。\n\n你可以问我任何关于初中课程的问题，我会尽力帮助你！\n\n例如：\n• 数学：勾股定理是什么？\n• 物理：牛顿第一定律怎么理解？\n• 化学：什么是化合价？")
+        # Add Welcome Message
+        self._add_message("assistant", "Hello！IYes柏慧学堂AIQ&AAssistant。\n\nYouCan AskIAnyAboutJuniorHighCourseAskQuestion，I Will Try My BestHelpYou！\n\nExampleSuch As：\n• Math：Pythagorean TheoremYesWhat？\n• Physics：Newton First Law？\n• Chemistry：WhatYesizeCombined Price？")
         
-        # 输入区域
+        # InputArea
         input_frame = ctk.CTkFrame(main_frame, fg_color="#f8f9fa", height=80)
         input_frame.pack(fill="x", padx=10, pady=10)
         input_frame.pack_propagate(False)
         
-        # 文本输入框
+        # Text InputBox
         self.input_text = ctk.CTkTextbox(
             input_frame,
             height=50,
@@ -81,12 +81,12 @@ class AIChatPanel(ctk.CTkFrame):
         )
         self.input_text.pack(side="left", fill="x", expand=True, padx=(10, 5), pady=10)
         self.input_text.bind("<Return>", self._on_enter)
-        self.input_text.bind("<Shift-Return>", lambda e: None)  # 允许换行
+        self.input_text.bind("<Shift-Return>", lambda e: None)  # Allow Line Break
         
-        # 发送按钮
+        # SendByButton
         send_btn = ctk.CTkButton(
             input_frame,
-            text="发送",
+            text="Send",
             font=ctk.CTkFont(size=14, weight="bold"),
             fg_color="#3498db",
             hover_color="#2980b9",
@@ -97,57 +97,57 @@ class AIChatPanel(ctk.CTkFrame):
         send_btn.pack(side="right", padx=10, pady=10)
     
     def _on_enter(self, event):
-        """处理回车键"""
-        if not event.state & 0x1:  # 非Shift
+        """ProcessEnter Key"""
+        if not event.state & 0x1:  # NonShift
             self._send_message()
     
     def _send_message(self):
-        """发送消息"""
+        """SendMessage"""
         message = self.input_text.get("1.0", "end-1c").strip()
         if not message:
             return
         
-        # 检查API密钥
+        # CheckAPISecret Key
         if not self.ai_service or not self.ai_service.api_key:
-            self._add_message("system", "请先在设置中配置AI API密钥。")
+            self._add_message("system", "Please firstInSettingsInConfigureAI APISecret Key。")
             return
         
-        # 清空输入框
+        # ClearInputBox
         self.input_text.delete("1.0", "end")
         
-        # 添加用户消息
+        # AddUserMessage
         self._add_message("user", message)
         
-        # 添加loading指示
+        # AddloadingIndicator
         loading_id = self._add_loading_message()
         
-        # 在后台线程中获取AI回复
+        # InFetch in Background ThreadAIReply
         def get_reply():
             try:
                 reply = self._get_ai_reply(message)
-                # 在主线程中更新UI
+                # InIn Main ThreadMoreNewUI
                 self.after(0, lambda lid=loading_id: self._remove_loading_message(lid))
                 self.after(0, lambda: self._add_message("assistant", reply))
             except Exception as e:
-                self.after(0, lambda: self._show_error(f"❌ 错误: {str(e)}"))
+                self.after(0, lambda: self._show_error(f"❌ Error: {str(e)}"))
         
         threading.Thread(target=get_reply, daemon=True).start()
     
     def _show_reply(self, reply: str):
-        """显示AI回复（兼容旧方法）"""
+        """ShowAIReply（Compatible with Old Method）"""
         self._add_message("assistant", reply)
     
     def _show_error(self, error: str):
-        """显示错误信息"""
+        """ShowErrorInfo"""
         self._add_message("system", error)
     
     def _get_ai_reply(self, question: str) -> str:
-        """获取AI回复（非流式，保留兼容）"""
+        """GetAIReply（NonStreamType，Retain Compatibility）"""
         if not self.ai_service or not self.ai_service.api_key:
-            return "请先在设置中配置AI API密钥。"
+            return "Please firstInSettingsInConfigureAI APISecret Key。"
         
-        # 构建系统提示
-        system_prompt = "你是一位经验丰富的初中辅导老师，善于用通俗易懂的方式解释知识点，并给出学习建议。请用中文回答。"
+        # Build SystemTip
+        system_prompt = "YouYesExperiencedJuniorHighTutor，Good AtUseEasy to UnderstandTypeExplain Knowledge Point，And ProvideStudySuggestion。PleaseAnswer in Chinese。"
         
         try:
             import requests
@@ -181,14 +181,14 @@ class AIChatPanel(ctk.CTkFrame):
             return reply
             
         except Exception as e:
-            return f"获取回复失败: {str(e)}"
+            return f"GetReplyFailed: {str(e)}"
     
     def _add_message(self, role: str, content: str) -> str:
-        """添加消息到聊天区域"""
+        """Add Message ToChatArea"""
         msg_frame = ctk.CTkFrame(self.messages_frame, fg_color="transparent")
         msg_frame.pack(fill="x", pady=5)
         
-        # 头像
+        # Avatar
         avatar = ctk.CTkLabel(
             msg_frame,
             text="👤" if role == "user" else "🤖",
@@ -198,7 +198,7 @@ class AIChatPanel(ctk.CTkFrame):
         )
         avatar.pack(side="left", padx=5)
         
-        # 消息气泡 - 使用Label避免内建滚动条
+        # MessageBubble - UseLabelAvoidInsideBuild Scrollbar
         bubble = ctk.CTkLabel(
             msg_frame,
             text=content,
@@ -214,27 +214,27 @@ class AIChatPanel(ctk.CTkFrame):
         )
         bubble.pack(side="left", fill="x", expand=True, padx=5)
         
-        # 滚动到底部 - 使用tkinter的see方法
+        # Scroll ToBottom - UsetkinterseeMethod
         try:
             self.messages_frame.canvas.yview_moveto(1.0)
         except:
             pass
         
-        # 保存消息ID
+        # SaveMessageID
         msg_id = f"msg_{len(self.chat_history)}"
         self.chat_history.append({"role": role, "content": content})
         
         return msg_id
     
     def _add_loading_message(self) -> str:
-        """添加加载中的消息"""
+        """AddLoading's Message"""
         msg_frame = ctk.CTkFrame(self.messages_frame, fg_color="transparent")
         msg_frame.pack(fill="x", pady=5)
         
-        # 加载指示器
+        # LoadIndicator
         loading_label = ctk.CTkLabel(
             msg_frame,
-            text="⏳ AI正在思考中...",
+            text="⏳ AIProcessingThinkIn...",
             font=ctk.CTkFont(size=12),
             text_color="#888888",
             anchor="w"
@@ -248,32 +248,32 @@ class AIChatPanel(ctk.CTkFrame):
         return loading_id
     
     def _update_loading_message(self, loading_id: str, content: str):
-        """更新loading消息内容"""
+        """MoreNewloadingMessage Content"""
         if loading_id in self._loading_widgets:
             widget = self._loading_widgets[loading_id]
-            widget.configure(text=f"⏳ AI正在思考中...\n{content}")
+            widget.configure(text=f"⏳ AIProcessingThinkIn...\n{content}")
     
     def _remove_loading_message(self, loading_id: str):
-        """移除loading消息"""
+        """RemoveloadingMessage"""
         if loading_id in self._loading_widgets:
             widget = self._loading_widgets.pop(loading_id)
             widget.destroy()
     
     def _update_reply(self, loading_id: str, reply: str):
-        """更新回复消息（已废弃）"""
+        """MoreNewReply Message（AlreadyDeprecated）"""
         self._add_message("assistant", reply)
     
     def set_api_key(self, key: str):
-        """设置API密钥"""
+        """SettingsAPISecret Key"""
         if self.ai_service:
             self.ai_service.set_api_key(key)
     
     def clear_chat(self):
-        """清空聊天历史"""
+        """ClearChatHistory"""
         self.chat_history = []
         self._loading_widgets = {}
-        # 清空消息区域
+        # Clear MessagesArea
         for widget in self.messages_frame.winfo_children():
             widget.destroy()
-        # 重新添加欢迎消息
-        self._add_message("assistant", "你好！我是柏慧学堂AI答疑助手。\n\n你可以问我任何关于初中课程的问题，我会尽力帮助你！\n\n例如：\n• 数学：勾股定理是什么？\n• 物理：牛顿第一定律怎么理解？\n• 化学：什么是化合价？")
+        # AgainNewAdd Welcome Message
+        self._add_message("assistant", "Hello！IYes柏慧学堂AIQ&AAssistant。\n\nYouCan AskIAnyAboutJuniorHighCourseAskQuestion，I Will Try My BestHelpYou！\n\nExampleSuch As：\n• Math：Pythagorean TheoremYesWhat？\n• Physics：Newton First Law？\n• Chemistry：WhatYesizeCombined Price？")
