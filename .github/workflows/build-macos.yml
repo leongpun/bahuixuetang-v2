@@ -23,14 +23,22 @@ jobs:
       run: |
         pip install -r requirements.txt
         pip install pyinstaller
-        brew install ffmpeg  # 用于视频播放
+        brew install ffmpeg
         
-    - name: Build macOS app
+    - name: Build universal macOS app
       run: |
-        python build_macos.py
+        # 构建Universal Binary（同时支持Intel和Apple Silicon）
+        pyinstaller --onefile \
+          --windowed \
+          --name "柏慧学堂" \
+          --osx-bundle-identifier com.baihuixuetang.app \
+          run_app.py
+        
+        # 验证架构支持
+        file dist/柏慧学堂
         
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: 柏慧学堂-macOS
-        path: dist/柏慧学堂.app
+        name: 柏慧学堂-macOS-universal
+        path: dist/柏慧学堂
